@@ -55,14 +55,10 @@ BOOST_LIBPATH=${CARLA_BUILD_FOLDER}
 rm -Rf ${BOOST_BASENAME}-source
 
 BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
+BOOST_URL="https://sourceforge.net/projects/boost/files/boost/${BOOST_VERSION}/${BOOST_PACKAGE_BASENAME}.tar.gz/download"
 
-log "Retrieving boost."
-wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
-# try to use the backup boost we have in Jenkins
-if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
-  log "Using boost backup"
-  wget "https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
-fi
+log "Retrieving boost from SourceForge."
+wget -O ${BOOST_PACKAGE_BASENAME}.tar.gz "${BOOST_URL}"
 
 log "Building boost filesystem object file."
 tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
@@ -83,7 +79,6 @@ BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
 
-# Get rid of  python2 build artifacts completely & do a clean build for python3
 popd >/dev/null
 rm -Rf ${BOOST_BASENAME}-source
 rm ${BOOST_PACKAGE_BASENAME}.tar.gz
@@ -92,9 +87,8 @@ cp -r ${BOOST_BASENAME}-install/include/boost ${BOOST_INCLUDE}/boost
 cp -r ${BOOST_BASENAME}-install/lib/* ${BOOST_LIBPATH}/ >/dev/null
 
 rm -Rf ${BOOST_BASENAME}-install
-
-
 unset BOOST_BASENAME
+
 
 # ==============================================================================
 # -- Get rpclib and compile it with libstdc++ -----------------------
